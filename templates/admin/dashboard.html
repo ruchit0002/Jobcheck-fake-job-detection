@@ -1,0 +1,628 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    /* Dashboard specific styles */
+    .stat-card {
+        background: linear-gradient(135deg, rgba(17, 24, 39, 0.95), rgba(15, 23, 42, 0.95));
+        border: 1px solid rgba(99, 102, 241, 0.3);
+        border-radius: 20px;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #6366f1, #22d3ee);
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+        border-color: rgba(99, 102, 241, 0.6);
+        box-shadow: 0 20px 40px -15px rgba(99, 102, 241, 0.3);
+    }
+    
+    .stat-icon {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(34, 211, 238, 0.2));
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+    }
+    
+    .stat-value {
+        font-size: 2.5rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #fff, #e5e7eb);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin: 0.5rem 0 0.25rem;
+    }
+    
+    .stat-label {
+        color: #9ca3af;
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .trend-up {
+        color: #10b981;
+        background: rgba(16, 185, 129, 0.1);
+        padding: 0.25rem 0.5rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+    }
+    
+    /* Timeline styles */
+    .timeline {
+        position: relative;
+        padding: 1rem 0;
+    }
+    
+    .timeline-item {
+        position: relative;
+        padding-left: 3.5rem;
+        margin-bottom: 1.5rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .timeline-item:hover {
+        transform: translateX(5px);
+    }
+    
+    .timeline-badge {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1rem;
+    }
+    
+    .timeline-content {
+        background: rgba(15, 23, 42, 0.6);
+        padding: 1rem;
+        border-radius: 12px;
+        border-left: 3px solid #6366f1;
+    }
+    
+    .timeline-content h6 {
+        color: #f3f4f6;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Quick action buttons */
+    .quick-action-btn {
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(34, 211, 238, 0.15));
+        border: 1px solid rgba(99, 102, 241, 0.3);
+        border-radius: 15px;
+        padding: 1rem;
+        text-align: center;
+        transition: all 0.3s ease;
+        display: block;
+        text-decoration: none;
+    }
+    
+    .quick-action-btn:hover {
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(34, 211, 238, 0.25));
+        transform: translateY(-3px);
+        border-color: rgba(99, 102, 241, 0.6);
+    }
+    
+    .quick-action-icon {
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(135deg, #6366f1, #22d3ee);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 0.75rem;
+        font-size: 1.5rem;
+    }
+    
+    .quick-action-title {
+        color: #e5e7eb;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+    
+    .quick-action-desc {
+        color: #9ca3af;
+        font-size: 0.75rem;
+    }
+    
+    /* Table styles */
+    .table-modern {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0 0.5rem;
+    }
+    
+    .table-modern thead th {
+        background: rgba(99, 102, 241, 0.2);
+        color: #e5e7eb;
+        font-weight: 600;
+        padding: 0.75rem 1rem;
+        border: none;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .table-modern tbody tr {
+        background: rgba(15, 23, 42, 0.6);
+        border-radius: 12px;
+        transition: all 0.2s ease;
+    }
+    
+    .table-modern tbody tr:hover {
+        background: rgba(99, 102, 241, 0.15);
+        transform: scale(1.01);
+    }
+    
+    .table-modern td {
+        padding: 1rem;
+        color: #d1d5db;
+        border: none;
+    }
+    
+    /* Badge styles */
+    .badge-admin {
+        background: linear-gradient(135deg, #f43f5e, #e11d48);
+        color: white;
+        padding: 0.3rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    
+    .badge-user {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+        padding: 0.3rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    
+    /* System health cards */
+    .health-card {
+        background: rgba(15, 23, 42, 0.8);
+        border-radius: 15px;
+        padding: 1.5rem;
+        text-align: center;
+        border: 1px solid rgba(99, 102, 241, 0.2);
+        transition: all 0.3s ease;
+    }
+    
+    .health-card:hover {
+        border-color: rgba(99, 102, 241, 0.5);
+        transform: translateY(-3px);
+    }
+    
+    .health-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #e5e7eb;
+        margin-top: 0.5rem;
+    }
+    
+    /* Gradient text */
+    .gradient-text {
+        background: linear-gradient(135deg, #a5b4fc, #22d3ee);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+</style>
+
+<div class="page-header" data-aos="fade-down">
+    <h1>
+        <i class="fas fa-crown me-3" style="color: #f59e0b;"></i>
+        Admin Dashboard
+    </h1>
+    <p class="text-muted">Welcome back, <strong class="gradient-text">{{ current_user.username }}</strong>! Monitor and manage your application from this central hub.</p>
+</div>
+
+<!-- Stats Cards -->
+<div class="row g-4 mb-5">
+    <div class="col-md-3" data-aos="fade-up" data-aos-delay="0">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-icon">
+                        <i class="fas fa-users" style="color: #6366f1;"></i>
+                    </div>
+                    <div class="stat-value">{{ total_users }}</div>
+                    <div class="stat-label">Total Users</div>
+                </div>
+                <div class="trend-up">
+                    <i class="fas fa-arrow-up me-1"></i>+12%
+                </div>
+            </div>
+            <div class="mt-3">
+                <small class="text-muted">
+                    <i class="fas fa-calendar-alt me-1"></i>This week
+                </small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3" data-aos="fade-up" data-aos-delay="100">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-icon">
+                        <i class="fas fa-user-tie" style="color: #f43f5e;"></i>
+                    </div>
+                    <div class="stat-value">{{ total_admins }}</div>
+                    <div class="stat-label">Administrators</div>
+                </div>
+                <div class="trend-up">
+                    <i class="fas fa-shield-alt me-1"></i>Privileged
+                </div>
+            </div>
+            <div class="mt-3">
+                <small class="text-muted">
+                    <i class="fas fa-crown me-1"></i>Admin accounts
+                </small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3" data-aos="fade-up" data-aos-delay="200">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-icon">
+                        <i class="fas fa-chart-line" style="color: #22d3ee;"></i>
+                    </div>
+                    <div class="stat-value">{{ total_predictions }}</div>
+                    <div class="stat-label">Total Predictions</div>
+                </div>
+                <div class="trend-up">
+                    <i class="fas fa-chart-simple me-1"></i>Active
+                </div>
+            </div>
+            <div class="mt-3">
+                <small class="text-muted">
+                    <i class="fas fa-check-circle text-success me-1"></i>
+                    {{ fake_detected }} fake jobs detected
+                </small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3" data-aos="fade-up" data-aos-delay="300">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-icon">
+                        <i class="fas fa-check-double" style="color: #10b981;"></i>
+                    </div>
+                    <div class="stat-value">97.4%</div>
+                    <div class="stat-label">Accuracy Rate</div>
+                </div>
+                <div class="trend-up">
+                    <i class="fas fa-arrow-up me-1"></i>+2.3%
+                </div>
+            </div>
+            <div class="mt-3">
+                <small class="text-muted">
+                    <i class="fas fa-clock me-1"></i>Last 30 days
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row g-4 mb-5">
+    <div class="col-12" data-aos="fade-up">
+        <div class="card-modern">
+            <div class="card-header-modern">
+                <h5 class="mb-0">
+                    <i class="fas fa-bolt me-2" style="color: #f59e0b;"></i>
+                    Quick Actions
+                </h5>
+            </div>
+            <div class="card-body-modern">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <a href="{{ url_for('admin_users') }}" class="quick-action-btn">
+                            <div class="quick-action-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="quick-action-title">Manage Users</div>
+                            <div class="quick-action-desc">Add, edit, or remove users</div>
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{{ url_for('admin_analytics') }}" class="quick-action-btn">
+                            <div class="quick-action-icon">
+                                <i class="fas fa-chart-pie"></i>
+                            </div>
+                            <div class="quick-action-title">View Analytics</div>
+                            <div class="quick-action-desc">Monitor system performance</div>
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{{ url_for('admin_settings') }}" class="quick-action-btn">
+                            <div class="quick-action-icon">
+                                <i class="fas fa-cog"></i>
+                            </div>
+                            <div class="quick-action-title">Settings</div>
+                            <div class="quick-action-desc">Configure system preferences</div>
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="quick-action-btn" onclick="checkSystemStatus()">
+                            <div class="quick-action-icon">
+                                <i class="fas fa-heartbeat"></i>
+                            </div>
+                            <div class="quick-action-title">System Status</div>
+                            <div class="quick-action-desc">Check system health</div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Recent Users -->
+    <div class="col-lg-6" data-aos="fade-right">
+        <div class="card-modern">
+            <div class="card-header-modern d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-user-clock me-2" style="color: #22d3ee;"></i>
+                    Recent Users
+                </h5>
+                <a href="{{ url_for('admin_users') }}" class="btn btn-sm btn-outline-primary">
+                    View All <i class="fas fa-arrow-right ms-1"></i>
+                </a>
+            </div>
+            <div class="card-body-modern p-0">
+                <div class="table-responsive">
+                    <table class="table-modern">
+                        <thead>
+                            <tr>
+                                <th><i class="fas fa-user me-1"></i> User</th>
+                                <th><i class="fas fa-envelope me-1"></i> Email</th>
+                                <th><i class="fas fa-tag me-1"></i> Role</th>
+                                <th><i class="fas fa-calendar me-1"></i> Joined</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in recent_users %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="rounded-circle bg-primary bg-opacity-25 p-2 me-2">
+                                            <i class="fas fa-user-circle text-primary"></i>
+                                        </div>
+                                        <strong>{{ user.username }}</strong>
+                                    </div>
+                                </td>
+                                <td>{{ user.email }}</td>
+                                <td>
+                                    {% if user.get('is_admin', False) %}
+                                    <span class="badge-admin">
+                                        <i class="fas fa-crown me-1"></i>Admin
+                                    </span>
+                                    {% else %}
+                                    <span class="badge-user">
+                                        <i class="fas fa-user me-1"></i>User
+                                    </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if user.created_at %}
+                                        {{ user.created_at.split(' ')[0] }}
+                                    {% else %}
+                                        <span class="text-muted">Recently</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Activity -->
+    <div class="col-lg-6" data-aos="fade-left">
+        <div class="card-modern">
+            <div class="card-header-modern">
+                <h5 class="mb-0">
+                    <i class="fas fa-history me-2" style="color: #10b981;"></i>
+                    Recent Activity
+                </h5>
+            </div>
+            <div class="card-body-modern">
+                <div class="timeline">
+                    {% for activity in activities %}
+                    <div class="timeline-item">
+                        <div class="timeline-badge" style="background: linear-gradient(135deg, 
+                            {% if 'login' in activity.action.lower() %}#6366f1, #22d3ee
+                            {% elif 'analyzed' in activity.action.lower() %}#10b981, #059669
+                            {% elif 'registered' in activity.action.lower() %}#f59e0b, #d97706
+                            {% else %}#8b5cf6, #6d28d9{% endif %});">
+                            <i class="fas 
+                                {% if 'login' in activity.action.lower() %}fa-sign-in-alt
+                                {% elif 'analyzed' in activity.action.lower() %}fa-search
+                                {% elif 'registered' in activity.action.lower() %}fa-user-plus
+                                {% else %}fa-bell{% endif %}">
+                            </i>
+                        </div>
+                        <div class="timeline-content">
+                            <h6>{{ activity.action }}</h6>
+                            <p class="text-muted mb-1">
+                                <i class="fas fa-user me-1"></i>by <strong>{{ activity.user }}</strong>
+                            </p>
+                            <small class="text-muted">
+                                <i class="far fa-clock me-1"></i>{{ activity.time }}
+                            </small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- System Health -->
+<div class="row mt-4 g-4">
+    <div class="col-12" data-aos="fade-up">
+        <div class="card-modern">
+            <div class="card-header-modern">
+                <h5 class="mb-0">
+                    <i class="fas fa-server me-2" style="color: #22d3ee;"></i>
+                    System Health Monitor
+                </h5>
+            </div>
+            <div class="card-body-modern">
+                <div class="row">
+                    <div class="col-md-3 mb-4 mb-md-0">
+                        <div class="health-card">
+                            <i class="fas fa-microchip fa-2x" style="color: #6366f1;"></i>
+                            <div class="health-value" id="cpu-value">--</div>
+                            <div class="text-muted">CPU Usage</div>
+                            <div class="progress mt-2" style="height: 5px;">
+                                <div class="progress-bar" id="cpu-progress" style="width: 0%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-4 mb-md-0">
+                        <div class="health-card">
+                            <i class="fas fa-memory fa-2x" style="color: #22d3ee;"></i>
+                            <div class="health-value" id="memory-value">--</div>
+                            <div class="text-muted">Memory Usage</div>
+                            <div class="progress mt-2" style="height: 5px;">
+                                <div class="progress-bar" id="memory-progress" style="width: 0%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-4 mb-md-0">
+                        <div class="health-card">
+                            <i class="fas fa-hdd fa-2x" style="color: #10b981;"></i>
+                            <div class="health-value" id="disk-value">--</div>
+                            <div class="text-muted">Disk Usage</div>
+                            <div class="progress mt-2" style="height: 5px;">
+                                <div class="progress-bar" id="disk-progress" style="width: 0%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="health-card">
+                            <i class="fas fa-check-circle fa-2x text-success"></i>
+                            <div class="health-value" id="status-text">Healthy</div>
+                            <div class="text-muted">System Status</div>
+                            <div class="mt-2">
+                                <span class="badge bg-success" id="status-badge">
+                                    <i class="fas fa-check me-1"></i>Operational
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<script>
+function checkSystemStatus() {
+    fetch('/admin/system-status')
+        .then(response => response.json())
+        .then(data => {
+            // Update CPU
+            updateHealthMetric('cpu', data.cpu_usage);
+            // Update Memory
+            updateHealthMetric('memory', data.memory_usage);
+            // Update Disk
+            updateHealthMetric('disk', data.disk_usage);
+            
+            // Determine overall status
+            let overallStatus = 'Healthy';
+            let statusColor = 'success';
+            let statusIcon = 'fa-check-circle';
+            
+            if (data.cpu_usage > 80 || data.memory_usage > 85 || data.disk_usage > 90) {
+                overallStatus = 'Warning';
+                statusColor = 'warning';
+                statusIcon = 'fa-exclamation-triangle';
+            }
+            if (data.cpu_usage > 95 || data.memory_usage > 95 || data.disk_usage > 95) {
+                overallStatus = 'Critical';
+                statusColor = 'danger';
+                statusIcon = 'fa-skull-crossbones';
+            }
+            
+            document.getElementById('status-text').innerHTML = overallStatus;
+            document.getElementById('status-badge').innerHTML = `<i class="fas ${statusIcon} me-1"></i>${overallStatus}`;
+            document.getElementById('status-badge').className = `badge bg-${statusColor}`;
+        })
+        .catch(error => {
+            console.error('Error fetching system status:', error);
+            document.getElementById('status-text').innerHTML = 'Offline';
+            document.getElementById('status-badge').innerHTML = '<i class="fas fa-exclamation-circle me-1"></i>Unreachable';
+            document.getElementById('status-badge').className = 'badge bg-danger';
+        });
+}
+
+function updateHealthMetric(type, value) {
+    const element = document.getElementById(`${type}-value`);
+    const progress = document.getElementById(`${type}-progress`);
+    
+    if (element && progress) {
+        element.innerHTML = `${value}%`;
+        progress.style.width = `${value}%`;
+        
+        // Set color based on value
+        if (value < 50) {
+            progress.className = 'progress-bar bg-success';
+        } else if (value < 80) {
+            progress.className = 'progress-bar bg-warning';
+        } else {
+            progress.className = 'progress-bar bg-danger';
+        }
+    }
+}
+
+// Auto-load on page load
+document.addEventListener('DOMContentLoaded', function() {
+    checkSystemStatus();
+    
+    // Refresh every 30 seconds
+    setInterval(checkSystemStatus, 30000);
+});
+</script>
+{% endblock %}

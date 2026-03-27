@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-header" data-aos="fade-down">
+  <h1><i class="fas fa-user-plus me-2"></i> Create your JobCheck AI account</h1>
+  <p>Register to access the dashboard, predictions, and analysis tools</p>
+</div>
+
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6" data-aos="fade-up">
+      <div class="card-modern">
+        <div class="card-header-modern text-center">
+          <i class="fas fa-id-badge fa-3x mb-2"></i>
+          <h5 class="mb-0">Register</h5>
+        </div>
+        <div class="card-body-modern">
+          <form method="POST" action="{{ url_for('register') }}" id="registerForm">
+            <div class="mb-4">
+              <label class="form-label-modern"><i class="fas fa-user me-2"></i>Username</label>
+              <input type="text" class="form-control-modern" name="username" required minlength="3" placeholder="Choose a username">
+              <small class="text-muted d-block mt-1" style="font-size: 0.75rem;">3-50 characters</small>
+            </div>
+            
+            <div class="mb-4">
+              <label class="form-label-modern"><i class="fas fa-envelope me-2"></i>Email</label>
+              <input type="email" class="form-control-modern" name="email" required placeholder="you@example.com">
+            </div>
+            
+            <div class="mb-4">
+              <label class="form-label-modern"><i class="fas fa-lock me-2"></i>Password</label>
+              <input type="password" class="form-control-modern" name="password" id="password" required minlength="6" placeholder="Create a password">
+              <div class="mt-2" style="height: 4px; background: rgba(99,102,241,0.2); border-radius: 2px; overflow: hidden;">
+                <div id="strengthBar" style="width: 0%; height: 100%; transition: all 0.3s ease;"></div>
+              </div>
+              <small class="text-muted d-block mt-1" style="font-size: 0.75rem;">Minimum 6 characters</small>
+            </div>
+            
+            <div class="mb-4">
+              <label class="form-label-modern"><i class="fas fa-lock me-2"></i>Confirm Password</label>
+              <input type="password" class="form-control-modern" name="confirm_password" id="confirmPassword" required minlength="6" placeholder="Re-enter your password">
+              <div id="passwordMismatch" class="text-danger mt-1" style="font-size: 0.75rem; display: none;">
+                <i class="fas fa-exclamation-circle me-1"></i>Passwords do not match!
+              </div>
+            </div>
+            
+            <div class="mb-4">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="terms" required>
+                <label class="form-check-label" for="terms">
+                  I agree to the <a href="#" class="text-decoration-none" style="color: #a5b4fc;">Terms</a> and <a href="#" class="text-decoration-none" style="color: #a5b4fc;">Privacy Policy</a>
+                </label>
+              </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary-modern w-100 py-2" id="submitBtn">
+              <i class="fas fa-user-plus me-2"></i> Create Account
+            </button>
+          </form>
+          
+          <hr class="my-4" style="background: rgba(99,102,241,0.2);">
+          
+          <div class="text-center">
+            <p class="text-muted mb-3">Already have an account?</p>
+            <a href="{{ url_for('login') }}" class="btn btn-primary-modern">
+              <i class="fas fa-sign-in-alt me-1"></i> Sign In
+            </a>
+            <a href="{{ url_for('index') }}" class="btn btn-modern ms-2" style="background: linear-gradient(135deg, rgba(99,102,241,0.25), rgba(34,211,238,0.25)); color:#e5e7eb;">
+              <i class="fas fa-home me-1"></i> Back to Dashboard
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Password strength meter
+const passwordInput = document.getElementById('password');
+const confirmInput = document.getElementById('confirmPassword');
+const strengthBar = document.getElementById('strengthBar');
+const mismatchMsg = document.getElementById('passwordMismatch');
+const submitBtn = document.getElementById('submitBtn');
+
+function checkPasswordStrength(password) {
+    let strength = 0;
+    if (password.length >= 6) strength += 25;
+    if (password.length >= 10) strength += 25;
+    if (/[A-Z]/.test(password)) strength += 25;
+    if (/[0-9]/.test(password)) strength += 25;
+    
+    if (strength <= 25) {
+        strengthBar.style.backgroundColor = '#ef4444';
+    } else if (strength <= 50) {
+        strengthBar.style.backgroundColor = '#f59e0b';
+    } else if (strength <= 75) {
+        strengthBar.style.backgroundColor = '#3b82f6';
+    } else {
+        strengthBar.style.backgroundColor = '#10b981';
+    }
+    
+    strengthBar.style.width = strength + '%';
+    return strength;
+}
+
+function validatePasswords() {
+    const password = passwordInput.value;
+    const confirm = confirmInput.value;
+    
+    if (confirm.length > 0 && password !== confirm) {
+        mismatchMsg.style.display = 'block';
+        submitBtn.disabled = true;
+        submitBtn.style.opacity = '0.5';
+        return false;
+    } else {
+        mismatchMsg.style.display = 'none';
+        if (password.length >= 6) {
+            submitBtn.disabled = false;
+            submitBtn.style.opacity = '1';
+        }
+        return true;
+    }
+}
+
+passwordInput.addEventListener('input', function() {
+    checkPasswordStrength(this.value);
+    validatePasswords();
+});
+
+confirmInput.addEventListener('input', validatePasswords);
+
+// Form submission validation
+document.getElementById('registerForm').addEventListener('submit', function(e) {
+    if (!validatePasswords()) {
+        e.preventDefault();
+        alert('Please make sure passwords match!');
+    }
+});
+</script>
+{% endblock %}

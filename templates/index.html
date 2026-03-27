@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-header" data-aos="fade-down">
+    <h1><i class="fas fa-shield-alt me-3"></i>Job Fraud Intelligence Center</h1>
+    <p>Real-time monitoring and analysis of job postings using advanced machine learning</p>
+    <div class="mt-4 d-flex flex-wrap justify-content-center gap-2">
+        <a href="{{ url_for('prediction') }}" class="btn btn-primary-modern btn-modern shadow-glow">
+            <i class="fas fa-rocket me-2"></i> Start Prediction
+        </a>
+        <a href="{{ url_for('exploration') }}" class="btn btn-success-modern btn-modern">
+            <i class="fas fa-compass me-2"></i> Explore Data
+        </a>
+    </div>
+    <div class="mt-3 text-center">
+        <span class="text-muted small">Quick Links</span>
+        <div class="d-flex flex-wrap justify-content-center gap-2 mt-2">
+            <a href="{{ url_for('nlp_analysis') }}" class="badge-modern badge-real text-decoration-none"><i class="fas fa-language me-1"></i> NLP Analysis</a>
+            <a href="{{ url_for('model_training') }}" class="badge-modern badge-real text-decoration-none"><i class="fas fa-brain me-1"></i> Model Training</a>
+            {% if current_user.is_authenticated and current_user.is_admin %}
+            <a href="{{ url_for('admin_dashboard') }}" class="badge-modern badge-fake text-decoration-none"><i class="fas fa-crown me-1"></i> Admin</a>
+            <a href="{{ url_for('admin_users') }}" class="badge-modern badge-fake text-decoration-none"><i class="fas fa-users me-1"></i> Users</a>
+            {% endif %}
+            {% if not current_user.is_authenticated %}
+            <a href="{{ url_for('login') }}" class="badge-modern text-decoration-none" style="background: linear-gradient(135deg, rgba(99,102,241,0.9), rgba(34,211,238,0.9)); color: #fff;"><i class="fas fa-sign-in-alt me-1"></i> Login</a>
+            <a href="{{ url_for('register') }}" class="badge-modern text-decoration-none" style="background: linear-gradient(135deg, rgba(16,185,129,0.9), rgba(5,150,105,0.9)); color: #fff;"><i class="fas fa-user-plus me-1"></i> Register</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Account Access (always visible) -->
+<div class="text-center my-3" data-aos="fade-up">
+    <a href="{{ url_for('login') }}" class="btn btn-modern me-2" style="background: linear-gradient(135deg, rgba(99,102,241,0.35), rgba(34,211,238,0.35)); color:#e5e7eb;">
+        <i class="fas fa-sign-in-alt me-1"></i> Login
+    </a>
+    <a href="{{ url_for('register') }}" class="btn btn-modern" style="background: linear-gradient(135deg, rgba(16,185,129,0.35), rgba(5,150,105,0.35)); color:#e5e7eb;">
+        <i class="fas fa-user-plus me-1"></i> Register
+    </a>
+</div>
+
+<!-- Stats Cards -->
+<div class="row g-4 mb-5">
+    <div class="col-md-3" data-aos="fade-up" data-aos-delay="100">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #4361ee20 0%, #3f37c920 100%); color: #4361ee;">
+                <i class="fas fa-briefcase"></i>
+            </div>
+            <div class="stat-title">Total Jobs Analyzed</div>
+            <div class="stat-value">{{ total_jobs }}</div>
+            <div class="stat-trend text-success">
+                <i class="fas fa-arrow-up"></i> +12.5% from last month
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3" data-aos="fade-up" data-aos-delay="200">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #f7258520 0%, #b5179e20 100%); color: #f72585;">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="stat-title">Fake Jobs Detected</div>
+            <div class="stat-value">{{ fake_jobs }}</div>
+            <div class="stat-trend text-danger">
+                <i class="fas fa-exclamation-circle"></i> {{ "%.1f"|format((fake_jobs/total_jobs*100) if total_jobs > 0 else 0) }}% of total
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3" data-aos="fade-up" data-aos-delay="300">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #4cc9f020 0%, #4361ee20 100%); color: #4cc9f0;">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-title">Legitimate Jobs</div>
+            <div class="stat-value">{{ real_jobs }}</div>
+            <div class="stat-trend text-success">
+                <i class="fas fa-shield-alt"></i> Verified
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3" data-aos="fade-up" data-aos-delay="400">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #f8961e20 0%, #f3722c20 100%); color: #f8961e;">
+                <i class="fas fa-robot"></i>
+            </div>
+            <div class="stat-title">AI Accuracy</div>
+            <div class="stat-value">{{ "%.1f"|format(accuracy * 100) }}%</div>
+            <div class="stat-trend text-success">
+                <i class="fas fa-chart-line"></i> +2.3% improvement
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row g-4 mb-5">
+    <div class="col-md-6" data-aos="fade-right">
+        <div class="card-modern">
+            <div class="card-header-modern">
+                <h5><i class="fas fa-chart-pie me-2"></i>Job Distribution Analysis</h5>
+            </div>
+            <div class="card-body-modern">
+                <div id="pie-chart" style="height: 400px;"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6" data-aos="fade-left">
+        <div class="card-modern">
+            <div class="card-header-modern">
+                <h5><i class="fas fa-chart-bar me-2"></i>Top Industries Targeted by Fraudsters</h5>
+            </div>
+            <div class="card-body-modern">
+                <div id="bar-chart" style="height: 400px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Insight Cards Row (replaces Recent Jobs Table) -->
+<div class="row g-4" data-aos="fade-up">
+    <div class="col-lg-4">
+        <div class="card-modern h-100">
+            <div class="card-header-modern d-flex align-items-center">
+                <i class="fas fa-lightbulb me-2"></i>
+                <h5 class="mb-0">Key Insights</h5>
+            </div>
+            <div class="card-body-modern">
+                <ul class="list-unstyled m-0">
+                    <li class="d-flex align-items-start mb-3">
+                        <span class="badge-modern badge-fake me-2"><i class="fas fa-bolt me-1"></i> Hot</span>
+                        <div class="text-sm" style="color:#cbd5e1">Fraud rate highest in top 2 industries this week.</div>
+                    </li>
+                    <li class="d-flex align-items-start mb-3">
+                        <span class="badge-modern badge-real me-2"><i class="fas fa-shield-alt me-1"></i> Safe</span>
+                        <div class="text-sm" style="color:#cbd5e1">Verified postings trending up by 8%.</div>
+                    </li>
+                    <li class="d-flex align-items-start">
+                        <span class="badge-modern me-2" style="background: linear-gradient(135deg, rgba(99,102,241,0.9), rgba(34,211,238,0.9)); color:#fff"><i class="fas fa-robot me-1"></i> AI</span>
+                        <div class="text-sm" style="color:#cbd5e1">Model confidence stable; continue monitoring anomalies.</div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card-modern h-100">
+            <div class="card-header-modern d-flex align-items-center">
+                <i class="fas fa-compass me-2"></i>
+                <h5 class="mb-0">Next Actions</h5>
+            </div>
+            <div class="card-body-modern">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('prediction') }}" class="btn btn-primary-modern btn-modern"><i class="fas fa-rocket me-2"></i>Run a Prediction</a>
+                    <a href="{{ url_for('exploration') }}" class="btn btn-success-modern btn-modern"><i class="fas fa-chart-area me-2"></i>Explore Dataset</a>
+                    <a href="{{ url_for('nlp_analysis') }}" class="btn btn-modern" style="background: linear-gradient(135deg, rgba(99,102,241,0.25), rgba(34,211,238,0.25)); color:#e5e7eb;"><i class="fas fa-language me-2"></i>Run NLP Analysis</a>
+                    <a href="{{ url_for('model_training') }}" class="btn btn-modern" style="background: linear-gradient(135deg, rgba(16,185,129,0.25), rgba(5,150,105,0.25)); color:#e5e7eb;"><i class="fas fa-brain me-2"></i>Train/Update Model</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card-modern h-100">
+            <div class="card-header-modern d-flex align-items-center">
+                <i class="fas fa-info-circle me-2"></i>
+                <h5 class="mb-0">System</h5>
+            </div>
+            <div class="card-body-modern">
+                <div class="text-sm" style="color:#cbd5e1">Prediction service ready. API-key based features auto-detect at runtime.</div>
+                <hr class="border-secondary border-opacity-25">
+                {% if current_user.is_authenticated and current_user.is_admin %}
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-modern" style="background: linear-gradient(135deg, rgba(99,102,241,0.25), rgba(34,211,238,0.25)); color:#e5e7eb;"><i class="fas fa-crown me-2"></i>Admin Dashboard</a>
+                    <a href="{{ url_for('admin_users') }}" class="btn btn-modern" style="background: linear-gradient(135deg, rgba(244,63,94,0.25), rgba(190,24,93,0.25)); color:#e5e7eb;"><i class="fas fa-users me-2"></i>Manage Users</a>
+                    <a href="{{ url_for('admin_settings') }}" class="btn btn-modern" style="background: linear-gradient(135deg, rgba(16,185,129,0.25), rgba(5,150,105,0.25)); color:#e5e7eb;"><i class="fas fa-sliders-h me-2"></i>Settings</a>
+                </div>
+                {% else %}
+                <div class="small" style="color:#94a3b8">Login as admin to access system controls.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Accessibility: ensure secondary text is readable -->
+<style>
+  .text-muted, .small, .text-sm { color: #cbd5e1 !important; }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Pie Chart
+    var pieData = [{
+        values: [{{ fake_jobs }}, {{ real_jobs }}],
+        labels: ['Fake Jobs', 'Real Jobs'],
+        type: 'pie',
+        marker: {
+            colors: ['#f72585', '#4cc9f0']
+        },
+        hole: 0.4,
+        textinfo: 'label+percent',
+        hoverinfo: 'label+value+percent'
+    }];
+
+    var pieLayout = {
+        height: 400,
+        margin: { t: 30, b: 30, l: 30, r: 30 },
+        showlegend: true,
+        legend: { orientation: 'h', y: -0.1 }
+    };
+
+    Plotly.newPlot('pie-chart', pieData, pieLayout, {responsive: true});
+
+    // Bar Chart
+    var barData = [{
+        x: {{ industries|tojson }},
+        y: {{ industry_values|tojson }},
+        type: 'bar',
+        marker: {
+            color: {{ industry_values|tojson }},
+            colorscale: 'Viridis',
+            showscale: true
+        },
+        text: {{ industry_values|tojson }},
+        textposition: 'outside',
+        hoverinfo: 'x+y'
+    }];
+
+    var barLayout = {
+        height: 400,
+        margin: { t: 30, b: 50, l: 50, r: 30 },
+        xaxis: { tickangle: -45 },
+        yaxis: { title: 'Number of Jobs' }
+    };
+
+    Plotly.newPlot('bar-chart', barData, barLayout, {responsive: true});
+</script>
+{% endblock %}

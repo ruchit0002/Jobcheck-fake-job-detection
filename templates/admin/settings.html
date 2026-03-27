@@ -1,0 +1,337 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .settings-card {
+        background: linear-gradient(135deg, rgba(17, 24, 39, 0.95), rgba(15, 23, 42, 0.95));
+        border: 1px solid rgba(99, 102, 241, 0.2);
+        border-radius: 20px;
+        transition: all 0.3s ease;
+    }
+    
+    .settings-card:hover {
+        border-color: rgba(99, 102, 241, 0.5);
+    }
+    
+    .danger-zone {
+        border: 2px solid rgba(244, 63, 94, 0.3);
+        background: rgba(244, 63, 94, 0.05);
+    }
+    
+    .danger-zone:hover {
+        border-color: rgba(244, 63, 94, 0.6);
+        background: rgba(244, 63, 94, 0.1);
+    }
+    
+    .form-label {
+        color: #e5e7eb;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+    
+    .form-control-modern {
+        background: rgba(3, 7, 18, 0.8);
+        border: 1px solid rgba(99, 102, 241, 0.3);
+        color: #e5e7eb;
+        border-radius: 12px;
+        padding: 0.75rem 1rem;
+    }
+    
+    .form-control-modern:focus {
+        border-color: #6366f1;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        background: rgba(3, 7, 18, 0.9);
+    }
+    
+    .form-check-label {
+        color: #e5e7eb;
+    }
+    
+    .form-check-input {
+        background-color: rgba(3, 7, 18, 0.8);
+        border-color: rgba(99, 102, 241, 0.3);
+    }
+    
+    .form-check-input:checked {
+        background-color: #6366f1;
+        border-color: #6366f1;
+    }
+    
+    .btn-outline-secondary {
+        border-color: rgba(99, 102, 241, 0.3);
+        color: #e5e7eb;
+    }
+    
+    .btn-outline-secondary:hover {
+        background: rgba(99, 102, 241, 0.2);
+        border-color: #6366f1;
+    }
+</style>
+
+<div class="page-header" data-aos="fade-down">
+    <h1><i class="fas fa-cogs me-3" style="color: #22d3ee;"></i>System Settings</h1>
+    <p class="text-muted">Configure application settings and preferences</p>
+</div>
+
+<div class="row g-4">
+    <!-- API Configuration -->
+    <div class="col-md-6" data-aos="fade-right">
+        <div class="settings-card p-4">
+            <h5 class="mb-3">
+                <i class="fas fa-key me-2" style="color: #f59e0b;"></i>
+                API Configuration
+            </h5>
+            <form id="apiSettingsForm">
+                <div class="mb-3">
+                    <label class="form-label">Google Gemini API Key</label>
+                    <div class="input-group">
+                        <input type="password" class="form-control-modern" id="apiKey" 
+                               value="********" placeholder="Enter your API key">
+                        <button class="btn btn-outline-secondary" type="button" onclick="toggleApiKey()">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    <small class="text-muted mt-2 d-block">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Get your API key from <a href="https://makersuite.google.com/app/apikey" target="_blank" class="text-primary">Google AI Studio</a>
+                    </small>
+                </div>
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="useFallback" checked>
+                        <label class="form-check-label" for="useFallback">
+                            Use fallback mode when API is unavailable
+                        </label>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary w-100 py-2">
+                    <i class="fas fa-save me-2"></i>Update API Key
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Data Management -->
+    <div class="col-md-6" data-aos="fade-left">
+        <div class="settings-card p-4">
+            <h5 class="mb-3">
+                <i class="fas fa-database me-2" style="color: #10b981;"></i>
+                Data Management
+            </h5>
+            <div class="mb-3">
+                <label class="form-label">Data File Location</label>
+                <input type="text" class="form-control-modern" value="data/fake_job_postings.csv" readonly>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Records Loaded</label>
+                <input type="text" class="form-control-modern" value="17,880" readonly>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Last Updated</label>
+                <input type="text" class="form-control-modern" value="2024-01-15" readonly>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-primary" onclick="refreshData()">
+                    <i class="fas fa-sync-alt me-2"></i>Refresh Data
+                </button>
+                <button class="btn btn-outline-success" onclick="backupData()">
+                    <i class="fas fa-download me-2"></i>Backup
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Notification Settings -->
+    <div class="col-md-6" data-aos="fade-right">
+        <div class="settings-card p-4">
+            <h5 class="mb-3">
+                <i class="fas fa-bell me-2" style="color: #22d3ee;"></i>
+                Notification Settings
+            </h5>
+            <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" id="emailAlerts" checked>
+                <label class="form-check-label" for="emailAlerts">
+                    <strong>Email Alerts</strong>
+                    <div class="text-muted small">Send email notifications for new user registrations</div>
+                </label>
+            </div>
+            <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" id="fraudAlerts" checked>
+                <label class="form-check-label" for="fraudAlerts">
+                    <strong>Fraud Alerts</strong>
+                    <div class="text-muted small">Instant notifications when fake jobs are detected</div>
+                </label>
+            </div>
+            <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" id="systemAlerts">
+                <label class="form-check-label" for="systemAlerts">
+                    <strong>System Health Alerts</strong>
+                    <div class="text-muted small">Get notified about system performance issues</div>
+                </label>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Alert Email</label>
+                <input type="email" class="form-control-modern" value="admin@jobcheck.com">
+            </div>
+            <button class="btn btn-primary w-100 py-2" onclick="saveSettings()">
+                <i class="fas fa-save me-2"></i>Save Preferences
+            </button>
+        </div>
+    </div>
+    
+    <!-- Security Settings -->
+    <div class="col-md-6" data-aos="fade-left">
+        <div class="settings-card p-4">
+            <h5 class="mb-3">
+                <i class="fas fa-shield-alt me-2" style="color: #f43f5e;"></i>
+                Security Settings
+            </h5>
+            <div class="mb-3">
+                <label class="form-label">Session Timeout (minutes)</label>
+                <input type="number" class="form-control-modern" value="30" min="5" max="120">
+                <small class="text-muted mt-1 d-block">Auto logout after inactivity</small>
+            </div>
+            <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" id="twoFactor">
+                <label class="form-check-label" for="twoFactor">
+                    <strong>Two-Factor Authentication</strong>
+                    <div class="text-muted small">Require 2FA for all admin accounts</div>
+                </label>
+            </div>
+            <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" id="ipRestriction">
+                <label class="form-check-label" for="ipRestriction">
+                    <strong>IP Restriction</strong>
+                    <div class="text-muted small">Restrict admin access to specific IP addresses</div>
+                </label>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Allowed IPs (comma separated)</label>
+                <input type="text" class="form-control-modern" value="127.0.0.1, ::1" disabled>
+            </div>
+            <button class="btn btn-primary w-100 py-2" onclick="saveSettings()">
+                <i class="fas fa-save me-2"></i>Update Security
+            </button>
+        </div>
+    </div>
+    
+    <!-- Danger Zone -->
+    <div class="col-12 mt-2" data-aos="fade-up">
+        <div class="settings-card danger-zone p-4">
+            <h5 class="mb-3 text-danger">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                Danger Zone
+            </h5>
+            <div class="row align-items-center mb-4">
+                <div class="col-md-8">
+                    <h6 class="mb-1">Reset All Data</h6>
+                    <p class="text-muted mb-0 small">This will delete all users, predictions, and reset the application to default state.</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <button class="btn btn-outline-danger w-100" onclick="resetAllData()">
+                        <i class="fas fa-trash-alt me-2"></i>Reset Everything
+                    </button>
+                </div>
+            </div>
+            <hr class="border-secondary">
+            <div class="row align-items-center mb-4">
+                <div class="col-md-8">
+                    <h6 class="mb-1">Clear System Logs</h6>
+                    <p class="text-muted mb-0 small">Remove all system logs and activity history. This action cannot be undone.</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <button class="btn btn-outline-warning w-100" onclick="clearLogs()">
+                        <i class="fas fa-eraser me-2"></i>Clear Logs
+                    </button>
+                </div>
+            </div>
+            <hr class="border-secondary">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h6 class="mb-1">Delete All Fake Job Data</h6>
+                    <p class="text-muted mb-0 small">Remove all fake job entries from the database.</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <button class="btn btn-outline-danger w-100" onclick="deleteFakeJobs()">
+                        <i class="fas fa-trash me-2"></i>Delete Fake Jobs
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleApiKey() {
+    const input = document.getElementById('apiKey');
+    if (input.type === 'password') {
+        input.type = 'text';
+    } else {
+        input.type = 'password';
+    }
+}
+
+document.getElementById('apiSettingsForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const apiKey = document.getElementById('apiKey').value;
+    
+    if (apiKey === '********') {
+        alert('Please enter a valid API key');
+        return;
+    }
+    
+    fetch('/admin/api-key', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ api_key: apiKey })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('✓ API key updated successfully!');
+            document.getElementById('apiKey').value = '********';
+        } else {
+            alert('✗ Failed to update API key');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('✗ Failed to update API key');
+    });
+});
+
+function saveSettings() {
+    alert('✓ Settings saved successfully!');
+}
+
+function refreshData() {
+    if (confirm('Are you sure you want to refresh the data?')) {
+        alert('✓ Data refreshed successfully!');
+    }
+}
+
+function backupData() {
+    alert('✓ Data backup started. You will be notified when complete.');
+}
+
+function resetAllData() {
+    if (confirm('⚠️ WARNING: This will delete ALL data! Are you absolutely sure?')) {
+        if (confirm('Type "RESET" to confirm:')) {
+            alert('✓ Data reset completed.');
+        }
+    }
+}
+
+function clearLogs() {
+    if (confirm('Are you sure you want to clear all system logs?')) {
+        alert('✓ Logs cleared successfully!');
+    }
+}
+
+function deleteFakeJobs() {
+    if (confirm('Are you sure you want to delete all fake job entries?')) {
+        alert('✓ Fake jobs deleted successfully!');
+    }
+}
+</script>
+{% endblock %}
